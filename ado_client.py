@@ -94,8 +94,8 @@ class ADOClient:
                 # Print a small header so it's easy to see which log file this came from
                 header_name = getattr(ref, 'path', None) or getattr(ref, 'log', None) or f"log {ref.id}"
                 header = f"\n--- Log {idx + 1}/{len(log_refs)}: {header_name} (id={ref.id}) ---\n"
-                print(header + text)
-
+               # print(header + text)
+                #header_text = header + text
                 combined_text += header + text
 
                 if not all_logs:
