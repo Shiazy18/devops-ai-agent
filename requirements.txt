@@ -2,3 +2,4 @@ requests
 openai
 azure-identity
 dotenv
+azure-devops
