@@ -1,0 +1,63 @@
+HTTP/1.1 200 OK
+Cache-Control: no-cache
+Pragma: no-cache
+Content-Length: 428
+Content-Type: application/json; charset=utf-8; api-version=7.0
+Content-Encoding: gzip
+Expires: -1
+Vary: Accept-Encoding
+P3P: CP="CAO DSP COR ADMa DEV CONo TELo CUR PSA PSD TAI IVDo OUR SAMi BUS DEM NAV STA UNI COM INT PHY ONL FIN PUR LOC CNT"
+X-TFS-ProcessId: 91b59de9-7636-43f5-9838-9df389d8d196
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+ActivityId: 79863319-a4fd-450a-97b8-b76b3ae74895
+X-TFS-Session: 79863319-a4fd-450a-97b8-b76b3ae74895
+X-VSS-E2EID: 79863319-a4fd-450a-97b8-b76b3ae74895
+X-VSS-SenderDeploymentId: aa671e66-2da2-b247-ea94-ede72b24f5c9
+X-VSS-UserData: 77844d38-6d90-68c4-8758-88ee3fd3a1a1:shivam.pant@hcltech.com
+X-FRAME-OPTIONS: SAMEORIGIN
+Request-Context: appId=cid-v1:5123a874-15d5-4ee8-bd3f-81c7fb764bd6
+Access-Control-Expose-Headers: Request-Context
+X-Content-Type-Options: nosniff
+X-Cache: CONFIG_NOCACHE
+X-MSEdge-Ref: Ref A: DA7F0439201C46359A7E51B81E0FB049 Ref B: BOM01EDGE0715 Ref C: 2026-02-28T12:58:23Z
+Date: Sat, 28 Feb 2026 12:58:23 GMT
+Connection: close
+
+{
+  "queryType": "flat",
+  "queryResultType": "workItem",
+  "asOf": "2026-02-28T12:58:24Z",
+  "columns": [
+    {
+      "referenceName": "System.Id",
+      "name": "ID",
+      "url": "https://dev.azure.com/learn-ado-0918/_apis/wit/fields/System.Id"
+    },
+    {
+      "referenceName": "System.Title",
+      "name": "Title",
+      "url": "https://dev.azure.com/learn-ado-0918/_apis/wit/fields/System.Title"
+    },
+    {
+      "referenceName": "System.State",
+      "name": "State",
+      "url": "https://dev.azure.com/learn-ado-0918/_apis/wit/fields/System.State"
+    }
+  ],
+  "sortColumns": [
+    {
+      "field": {
+        "referenceName": "System.CreatedDate",
+        "name": "Created Date",
+        "url": "https://dev.azure.com/learn-ado-0918/_apis/wit/fields/System.CreatedDate"
+      },
+      "descending": true
+    }
+  ],
+  "workItems": [
+    {
+      "id": 2,
+      "url": "https://dev.azure.com/learn-ado-0918/f7ab3f72-70d0-4b53-a810-458c5354d9d4/_apis/wit/workItems/2"
+    }
+  ]
+}
