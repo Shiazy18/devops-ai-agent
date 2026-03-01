@@ -44,3 +44,12 @@ Optional: Change State to Resolved
 5. Validation,Safety Gate,"Run unit/integration tests on the PR. If failed, alert human."
 6. Closure,Finalize,"If tests pass (and confidence score > threshold), merge (or request approval)."
 
+
+## No of Angents and their work
+
+| Agent                   | Responsibility                                                      | Key Constraint / Safety Gate                                        |
+| ----------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Agent 1: The Observer   | Creates the Bug, collects raw logs, and initializes the "Case."     | Must verify the build actually failed (don't create false bugs).    |
+| Agent 2: The Architect  | Diagnoses the error and proposes the code fix (the "brain").        | Must not commit code; output must be a "Proposed Plan" JSON.        |
+| Agent 3: The Engineer   | Creates the feature branch and commits the fix proposed by Agent 2. | Must verify branch names and avoid touching protected config files. |
+| Agent 4: The PR Manager | Raises the PR and triggers validation.                              | Must add a summary of Agent 2's diagnosis to the PR description.    |
