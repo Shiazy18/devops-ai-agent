@@ -4,3 +4,7 @@ azure-identity
 dotenv
 azure-devops
 azure-functions
+crewai
+crewai-tools
+langchain-openai
+langchain-core 

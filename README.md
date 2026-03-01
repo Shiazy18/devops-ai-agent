@@ -20,6 +20,40 @@ Update Work Item (Boards API)
     ↓
 Optional: Change State to Resolved
 
+                ┌────────────────────┐
+                │  Azure DevOps      │
+                │  Pipeline Webhook  │
+                └─────────┬──────────┘
+                          │
+                          ▼
+                ┌────────────────────┐
+                │ Orchestrator       │  ← LangGraph (recommended)
+                │ (State Machine)    │
+                └─────────┬──────────┘
+                          │
+      ┌───────────────────┼───────────────────┐
+      ▼                   ▼                   ▼
+Agent 1              Agent 2              Agent 3
+Bug Creator          Architect            Engineer
+                          │
+                          ▼
+                     Agent 4 (PR)
+                          │
+                          ▼
+                   Azure DevOps PR API
+
+## Architecture Summary
+
+| Layer         | Tool                  |
+| ------------- | --------------------- |
+| LLM           | Azure GPT-4.1         |
+| Orchestration | LangGraph             |
+| State         | TypedDict + Cosmos    |
+| Validation    | Pydantic              |
+| DevOps        | Azure DevOps REST API |
+| Hosting       | Azure Functions       |
+| Observability | App Insights          |
+
 ## What's next
 
 🔹 Auto PR creation via Git API
@@ -53,3 +87,11 @@ Optional: Change State to Resolved
 | Agent 2: The Architect  | Diagnoses the error and proposes the code fix (the "brain").        | Must not commit code; output must be a "Proposed Plan" JSON.        |
 | Agent 3: The Engineer   | Creates the feature branch and commits the fix proposed by Agent 2. | Must verify branch names and avoid touching protected config files. |
 | Agent 4: The PR Manager | Raises the PR and triggers validation.                              | Must add a summary of Agent 2's diagnosis to the PR description.    |
+
+## Why Multi agent
+
+Fault Isolation: If Agent 2 (The Architect) hallucinates a bad fix, Agent 4 (The PR Manager) can still inspect the diff, realize it looks dangerous, and refuse to open the PR. In a single-agent system, the agent just "does it" without that second pair of eyes.
+
+Context Management: LLMs have "context windows." If you feed a massive amount of code to a single agent, it gets overwhelmed. By passing only the relevant snippets from Agent 2 to Agent 3, you keep your context clean and your costs down.
+
+Observability: If the process fails, you know exactly which agent failed. Did the bug creation fail? Or did the PR creation fail? You can debug the pipeline flow more easily.
