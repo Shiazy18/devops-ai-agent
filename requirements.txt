@@ -1,10 +1,7 @@
-requests
-openai
-azure-identity
-dotenv
+langgraph
+langchain
+langchain-openai
+pydantic
 azure-devops
 azure-functions
-crewai
-crewai-tools
-langchain-openai
-langchain-core 
+python-dotenv
