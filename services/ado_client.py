@@ -2,7 +2,10 @@ import os
 import logging
 from azure.devops.connection import Connection
 from msrest.authentication import BasicAuthentication
-from azure.devops.v7_0.work_item_tracking.models import JsonPatchOperation
+try:
+    from azure.devops.v7_0.work_item_tracking.models import JsonPatchOperation
+except ImportError:
+    from azure.devops.released.work_item_tracking.models import JsonPatchOperation
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -153,20 +156,33 @@ class ADOClient:
 
         # Determine if file exists (edit vs add)
         try:
+            from azure.devops.v7_1.git.models import GitVersionDescriptor
+            version_desc = GitVersionDescriptor(version_type="branch", version=branch_name)
             git_client.get_item(
                 repository_id=repository_id,
                 project=self.project,
                 path=file_path,
-                version_descriptor={
-                    "versionType": "branch",
-                    "version": branch_name
-                }
+                version_descriptor=version_desc
             )
+            # git_client.get_item(
+            #     repository_id=repository_id,
+            #     project=self.project,
+            #     path=file_path,
+            #     version_descriptor={
+            #         "versionType": "branch",
+            #         "version": branch_name
+            #     }
+            # )
             change_type = "edit"
             print(f"[ADO-Client] File exists. Performing EDIT.")
-        except Exception:
-            change_type = "add"
-            print(f"[ADO-Client] File does not exist. Performing ADD.")
+        except Exception as ex:
+            # Only set to 'add' if the error is file not found
+            if hasattr(ex, 'message') and ('not found' in ex.message.lower() or 'does not exist' in ex.message.lower()):
+                change_type = "add"
+                print(f"[ADO-Client] File does not exist. Performing ADD.")
+            else:
+                print(f"[ADO-Client] Unexpected error: {ex}")
+                raise
 
         # Create commit payload
         commit = {
@@ -256,6 +272,8 @@ class ADOClient:
     def create_pull_request(self, repository_id, source_branch, target_branch, title, description):
         from azure.devops.v7_0.git.models import GitPullRequest
 
+        git_client = self.connection.clients.get_git_client()
+        print(f"[ADO-Client]Creating PR from '{source_branch}' to '{target_branch}' with title '{title}'")
         pr = GitPullRequest(
             source_ref_name=f"refs/heads/{source_branch}",
             target_ref_name=f"refs/heads/{target_branch}",
@@ -263,43 +281,52 @@ class ADOClient:
             description=description
         )
 
-        created_pr = self.git_client.create_pull_request(
-            git_pull_request_to_create=pr,
-            repository_id=repository_id,
-            project=self.project
-        )
+        print(f"[ADO-Client] Description: {description}")
+        print(f"[ADO-Client] Starting PR creation...")
+        
+        try:
+            created_pr = git_client.create_pull_request(
+                git_pull_request_to_create=pr,
+                repository_id=repository_id,
+                project=self.project
+            )
+        except Exception as e:
+            print(f"[ADO-Client] Error creating PR: {e}")
+            raise
+
+        print(f"[ADO-Client] PR created with ID: {created_pr.pull_request_id}") 
 
         return created_pr
     
-    def get_file_content(self, repository_id: str, branch_name: str, file_path: str) -> str:
-        from azure.devops.v7_0.git.models import GitVersionDescriptor
-
-        print(f"[ADO-Client] Fetching file '{file_path}' from branch '{branch_name}'")
+    def get_file_content(self, repository_id: str, branch_name: str, file_path: str) -> bytes:
+        """
+        Streams the file from ADO and returns raw bytes.
+        Suitable for large/binary/LFS files.
+        """
+        try:
+            from azure.devops.v7_1.git.models import GitVersionDescriptor, GitVersionType
+        except ImportError:
+            from azure.devops.released.git.models import GitVersionDescriptor, GitVersionType
 
         if not file_path.startswith("/"):
             file_path = "/" + file_path
+        branch = branch_name.replace("refs/heads/", "")
 
         version_descriptor = GitVersionDescriptor(
-            version=branch_name,
-            version_type="branch"
+            version=branch,
+            version_type=GitVersionType.branch
         )
 
-        # for debugging
-        print(f"[ADO-Client] Version descriptor: {version_descriptor}")
-
-        item = self.git_client.get_item(
+        # get_item_content streams the file; join all chunks into bytes
+        # (Same underlying REST: Items - Get; here content comes as a stream) [1](https://learn.microsoft.com/en-us/rest/api/azure/devops/git/items/get?view=azure-devops-rest-7.1)[3](https://stackoverflow.com/questions/78814586/how-can-i-extract-file-contents-of-a-specific-commit-using-azure-devops-api-pyt)
+        content_iter = self.git_client.get_item_content(
             repository_id=repository_id,
             path=file_path,
             project=self.project,
             version_descriptor=version_descriptor,
-            include_content=True
+            resolve_lfs=True  # get actual content if file is LFS-tracked
         )
-        # for debugging
-        print(f"[ADO-Client] Got item: {item}")
-        if not item or not item.content:
-            raise Exception(f"File '{file_path}' not found or empty.")
-
-        return item.content
+        return b"".join(content_iter)
 
 
     # Set up logging so you can see errors in Azure/Console

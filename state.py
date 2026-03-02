@@ -1,5 +1,3 @@
-# state.py
-
 from typing import TypedDict, Optional, List, Literal
 
 
@@ -19,6 +17,7 @@ class PipelineState(TypedDict, total=False):
     repo_name: Optional[str]
     source_branch: Optional[str]
     commit_id: Optional[str]
+    new_branch: Optional[str]
 
     # Failure validation
     failure_verified: bool

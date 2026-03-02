@@ -100,7 +100,7 @@ def run(state):
 
         failure_type = re.search(r"FAILURE_TYPE:\s*(.*)", diagnosis_text)
         confidence = re.search(r"CONFIDENCE:\s*(.*)", diagnosis_text)
-        files_section = re.search(r"FILES_TO_MODIFY:\s*(.*?)(?:\n\n|$)", diagnosis_text)
+        root_cause = re.search(r"ROOT_CAUSE:\s*(.*)", diagnosis_text)
 
         files=[]
 
@@ -109,7 +109,7 @@ def run(state):
             if stripped.startswith("-"):
                 file_name = stripped[1:].strip() 
                 if not file_name.startswith("/"):
-                    file_name = "/" + file_name   # remove ONLY first character
+                    file_name = "/" + file_name   # add leading slash if missing
                     files.append(file_name)
             
 
@@ -118,6 +118,7 @@ def run(state):
             "raw_text": diagnosis_text,
             "failure_type": failure_type.group(1).strip().lower() if failure_type else "unknown",
             "confidence": float(confidence.group(1)) if confidence else 0.0,
+            "root_cause": root_cause.group(1).strip() if root_cause else "No root cause identified",
             "files_to_modify": files
         }
 
