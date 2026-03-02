@@ -19,15 +19,15 @@ load_dotenv()
 
 def test_run():
     # 🔹 Replace with a REAL failed build ID
-    build_id = 69
+    build_id = 71
     ado = ADOClient()
     result = run_remediation(build_id)
 
 
 
-    print("\n====== FINAL STATE ======")
-    for k, v in result.items():
-        print(f"{k}: {v}")
+    # print("\n====== FINAL STATE ======")
+    # for k, v in result.items():
+    #     print(f"{k}: {v}")
 
 if __name__ == "__main__":
     test_run()

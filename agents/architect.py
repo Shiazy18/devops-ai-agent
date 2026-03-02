@@ -1,6 +1,8 @@
 
+from pydoc import text
 from services.ado_client import ADOClient
 from services.llm import get_llm
+import re
 
 
 def run(state):
@@ -43,6 +45,7 @@ def run(state):
         print(f"[Architect] Repo: {state['repo_name']}")
         print(f"[Architect] Branch: {state['source_branch']}")
         print(f"[Architect] Commit: {state['commit_id']}")
+        print(f"[Architect] RepoID: {state['repo_id']}")
 
         # --------------------------------------------------
         # 2️⃣ Fetch Logs
@@ -62,28 +65,65 @@ def run(state):
         prompt = f"""
         You are a senior DevOps Architect.
 
-        Analyze the following Azure DevOps pipeline failure logs.
+        Analyze the complete pipeline logs and look for error messages. 
+        Carefully look for error messages as there can be multiple parallel jobs some may have succeeded and some may have failed. 
+        Focus on the failed ones.
+        If there are no logs, jus say no logs found.
+        Respond STRICTLY in this format:
 
-        1. Identify the root cause.
-        2. Suggest which file likely needs modification.
-        3. Keep the answer concise.
-        4. Return plain text (no markdown).
+        ROOT_CAUSE: <short explanation>
+
+        FAILURE_TYPE: <application | infrastructure | pipeline>
+
+        FILES_TO_MODIFY
+        Just give the exact file paths from the repo, no explanations:
+        Also if fixable via pipeline, suggest the pipeline file. Only give file paths, no explanations. If no files need to be modified, just say none.
+        - <file path 1>
+        - <file path 2>
+        and so on...
+
+        CONFIDENCE: <0.0 to 1.0>
+
+        No extra text outside this format.
+    
 
         Logs:
-        {logs[:8000]}
+        {logs}
         """
 
         response = llm.invoke(prompt)
-        diagnosis_text = response.content.strip()
+        diagnosis_text = response.content
+
 
         if not diagnosis_text:
             raise Exception("LLM returned empty diagnosis")
 
-        # For PoC we force at least one file
+        failure_type = re.search(r"FAILURE_TYPE:\s*(.*)", diagnosis_text)
+        confidence = re.search(r"CONFIDENCE:\s*(.*)", diagnosis_text)
+        files_section = re.search(r"FILES_TO_MODIFY:\s*(.*?)(?:\n\n|$)", diagnosis_text)
+
+        files=[]
+
+        for line in diagnosis_text.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("-"):
+                file_name = stripped[1:].strip() 
+                if not file_name.startswith("/"):
+                    file_name = "/" + file_name   # remove ONLY first character
+                    files.append(file_name)
+            
+
+
         state["diagnosis"] = {
             "raw_text": diagnosis_text,
-            "files_to_modify": ["/README.md"]  # Safe fallback for PoC
+            "failure_type": failure_type.group(1).strip().lower() if failure_type else "unknown",
+            "confidence": float(confidence.group(1)) if confidence else 0.0,
+            "files_to_modify": files
         }
+
+        print(f"[Architect] Diagnosis:\n{diagnosis_text}")
+        print(f"[Architect] Files to modify: {state['diagnosis']['files_to_modify']}")
+
 
         state["status"] = "Diagnosis completed"
 

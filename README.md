@@ -95,3 +95,6 @@ Fault Isolation: If Agent 2 (The Architect) hallucinates a bad fix, Agent 4 (The
 Context Management: LLMs have "context windows." If you feed a massive amount of code to a single agent, it gets overwhelmed. By passing only the relevant snippets from Agent 2 to Agent 3, you keep your context clean and your costs down.
 
 Observability: If the process fails, you know exactly which agent failed. Did the bug creation fail? Or did the PR creation fail? You can debug the pipeline flow more easily.
+
+Apply heuristic boosting
+trsut score₹

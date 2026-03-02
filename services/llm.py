@@ -11,5 +11,5 @@ def get_llm():
         api_version="2024-08-01-preview",
         azure_deployment=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
         temperature=0,
-        max_retries=3,
+        # max_retries=,
     )

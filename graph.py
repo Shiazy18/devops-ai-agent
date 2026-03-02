@@ -1,22 +1,52 @@
-from langgraph.graph import StateGraph
-from state import PipelineState
+# graph.py
 
-from agents import bug_validator, architect, engineer, pr_creator, manager
+from langgraph.graph import StateGraph
+from agents.architect import run as architect
+from agents.app_engineer import run as app_engineer
+from agents.infra_engineer import run as infra_engineer
+from agents.pipeline_engineer import run as pipeline_engineer
+from agents.pr_agent import run as pr_agent
+from agents.manager import run as manager
+
+
+def route_by_failure_type(state):
+    diagnosis = state.get("diagnosis", {})
+    failure_type = diagnosis.get("failure_type", "unknown")
+    confidence = diagnosis.get("confidence", 0.5)
+
+    if confidence < 0.6:
+        return "manager"
+    
+    print(f"[Router] Routing based on failure type: {failure_type} with confidence {confidence}")
+
+    if failure_type == "application":
+        return "app_engineer"
+    elif failure_type == "infrastructure":
+        return "infra_engineer"
+    elif failure_type == "pipeline":
+        return "pipeline_engineer"
+    else:
+        return "manager"
+
 
 def build_graph():
+    workflow = StateGraph(dict)
 
-    graph = StateGraph(PipelineState)
+    workflow.add_node("architect", architect)
+    workflow.add_node("app_engineer", app_engineer)
+    workflow.add_node("infra_engineer", infra_engineer)
+    workflow.add_node("pipeline_engineer", pipeline_engineer)
+    workflow.add_node("pr_agent", pr_agent)
+    workflow.add_node("manager", manager)
 
-    graph.add_node("validate", bug_validator.run)
-    graph.add_node("architect", architect.run)
-    graph.add_node("engineer", engineer.run)
-    graph.add_node("manager", manager.run)
-    graph.add_node("pr_creator", pr_creator.run)
+    workflow.set_entry_point("architect")
 
-    graph.set_entry_point("validate")
+    workflow.add_conditional_edges("architect", route_by_failure_type)
 
-    graph.add_edge("validate", "architect")
-    graph.add_edge("architect", "engineer")
-    graph.add_edge("engineer", "manager")
-    graph.add_edge("manager", "pr_creator")
-    return graph.compile()
+    workflow.add_edge("app_engineer", "pr_agent")
+    workflow.add_edge("infra_engineer", "pr_agent")
+    workflow.add_edge("pipeline_engineer", "pr_agent")
+
+    workflow.add_edge("pr_agent", "manager")
+
+    return workflow.compile()

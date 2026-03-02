@@ -1,13 +1,17 @@
-from tools.ado_tools import CreateBugTool
+from services.ado_client import ADOClient
 
 def run(state):
     try:
-        bug_tool = CreateBugTool()
-        bug_title = f"Pipeline failure: Build {state['build_id']}"
-        bug_description = state.get("diagnosis", {}).get("raw_text", "No diagnosis")
-        bug_id = bug_tool._run(bug_title, bug_description)
-        state["bug_id"] = bug_id
-        state["status"] = "Bug logged"
+        ado = ADOClient()
+
+        # Create a bug if failure verified
+        if state.get("failure_verified") and not state.get("bug_id"):
+            title = f"Pipeline failed: build {state['build_id']}"
+            description = state.get("diagnosis", {}).get("raw_text", "No details")
+            bug_id = ado.create_bug(title, description)
+            state["bug_id"] = bug_id
+
+        state["status"] = "Manager completed"
 
     except Exception as e:
         state["status"] = f"Manager failed: {str(e)}"

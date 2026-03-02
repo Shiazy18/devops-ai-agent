@@ -18,5 +18,7 @@ def run(state):
 
     logs = ado.get_build_logs(state["build_id"])
     state["logs"] = logs
+    print(f"[BugValidator] Fetched logs for build {state['build_id']}")
+    
 
     return state

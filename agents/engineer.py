@@ -43,6 +43,8 @@ def run(state):
         # --------------------------------------------------
         files = state.get("diagnosis", {}).get("files_to_modify")
 
+        print(f"[Engineer] Files suggested for modification: {files}")
+
         if not files or len(files) == 0:
             print("[Engineer] No files suggested. Using PoC fallback.")
             files = ["/README.md"]  # Safe PoC fallback
