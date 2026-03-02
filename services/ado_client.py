@@ -87,30 +87,50 @@ class ADOClient:
 
         return f"Bug created with ID: {work_item.id}"
     
-    def create_branch(self, branch_name: str, base_branch: str = "main"):
+    def create_branch(self, repository_id: str, branch_name: str, base_branch: str):
         git_client = self.connection.clients.get_git_client()
-        repo = git_client.get_repository(self.project)
 
+        print(f"[ADO] Creating branch '{branch_name}' from '{base_branch}'")
+
+        # Remove refs prefix if passed
+        base_branch = base_branch.replace("refs/heads/", "")
+
+        # Get base branch reference
         refs = git_client.get_refs(
-            repository_id=repo.id,
+            repository_id=repository_id,
+            project=self.project,
             filter=f"heads/{base_branch}"
         )
 
         if not refs:
-            raise Exception("Base branch not found")
+            raise Exception(f"Base branch '{base_branch}' not found")
 
-        base_commit = refs[0].object_id
+        base_commit_id = refs[0].object_id
 
-        git_client.update_refs(
-            ref_updates=[
-                {
-                    "name": f"refs/heads/{branch_name}",
-                    "oldObjectId": "0000000000000000000000000000000000000000",
-                    "newObjectId": base_commit
-                }
-            ],
-            repository_id=repo.id
+        # Check if branch already exists
+        existing = git_client.get_refs(
+            repository_id=repository_id,
+            project=self.project,
+            filter=f"heads/{branch_name}"
         )
+
+        if existing:
+            print(f"[ADO] Branch '{branch_name}' already exists. Skipping creation.")
+            return
+
+        # Create new branch
+        git_client.update_refs(
+            ref_updates=[{
+                "name": f"refs/heads/{branch_name}",
+                "oldObjectId": "0000000000000000000000000000000000000000",
+                "newObjectId": base_commit_id
+            }],
+            repository_id=repository_id,
+            project=self.project
+        )
+
+        print(f"[ADO] Branch '{branch_name}' created successfully.")
+    
 
 
     def commit_file_update(self, branch_name: str, file_path: str, new_content: str):

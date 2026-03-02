@@ -13,16 +13,16 @@
 import os
 from dotenv import load_dotenv
 from main import run_remediation
+from services.ado_client import ADOClient
 
 load_dotenv()
 
 def test_run():
     # 🔹 Replace with a REAL failed build ID
     build_id = 69
-
+    ado = ADOClient()
     result = run_remediation(build_id)
 
-    print("BUILD RESULT:", result)
 
 
     print("\n====== FINAL STATE ======")
