@@ -36,27 +36,19 @@ def run(state):
         
         for file_path in files:
             print(f"[AppEngineer] Fetching existing file: {file_path}")
-
             existing_content = ado.get_file_content(
                 repository_id=state["repo_id"],
                 branch_name=state["source_branch"],
                 file_path=file_path
             )
-
             prompt = f"""
             You are a senior Software Developer.
-
             Here is the current content of {file_path}:
-
             {existing_content}
-
             Root cause:
             {state['diagnosis']['root_cause']}
-
-            Provide the FULL corrected file content only.
-            Do not explain anything.
+            Provide ONLY the FULL corrected file content. No markdown, no explanation, just the file content.
             """
-
             print("[AppEngineer] Calling LLM...")
             response = llm.invoke(prompt)
             print("[AppEngineer] LLM responded.")

@@ -31,11 +31,6 @@ Optional: Change State to Resolved
                 │ (State Machine)    │
                 └─────────┬──────────┘
                           │
-      ┌───────────────────┼───────────────────┐
-      ▼                   ▼                   ▼
-Agent 1              Agent 2              Agent 3
-Bug Creator          Architect            Engineer
-                          │
                           ▼
                      Agent 4 (PR)
                           │
@@ -75,18 +70,9 @@ Bug Creator          Architect            Engineer
 2. Context,Gather data,"Fetch build logs, error messages, and relevant code snippets from the Repo."
 3. Reasoning,Analyze,Send context to an AI Agent (Azure AI Foundry) to propose a code fix.
 4. Action,Remediate,"Create a bug ticket, branch the repo, commit the fix, and open a PR via REST API."
-5. Validation,Safety Gate,"Run unit/integration tests on the PR. If failed, alert human."
-6. Closure,Finalize,"If tests pass (and confidence score > threshold), merge (or request approval)."
-
 
 ## No of Angents and their work
 
-| Agent                   | Responsibility                                                      | Key Constraint / Safety Gate                                        |
-| ----------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Agent 1: The Observer   | Creates the Bug, collects raw logs, and initializes the "Case."     | Must verify the build actually failed (don't create false bugs).    |
-| Agent 2: The Architect  | Diagnoses the error and proposes the code fix (the "brain").        | Must not commit code; output must be a "Proposed Plan" JSON.        |
-| Agent 3: The Engineer   | Creates the feature branch and commits the fix proposed by Agent 2. | Must verify branch names and avoid touching protected config files. |
-| Agent 4: The PR Manager | Raises the PR and triggers validation.                              | Must add a summary of Agent 2's diagnosis to the PR description.    |
 
 ## Why Multi agent
 

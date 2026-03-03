@@ -28,14 +28,26 @@ def run(state):
         # for debugging
         print(f"[InfraEngineer] Files suggested for modification: {files}")
         for file_path in files:
+            existing_content = ado.get_file_content(
+                repository_id=state["repo_id"],
+                branch_name=state["source_branch"],
+                file_path=file_path
+            )
             prompt = f"""
-            Modify infrastructure/config file {file_path} to fix the failure.
-
+            You are a senior Infrastructure Engineer.
+            Here is the current content of {file_path}:
+            {existing_content}
             Root cause:
             {state['diagnosis']['root_cause']}
+            Provide ONLY the FULL corrected file content. No markdown, no explanation, just the file content.
             """
             new_content = llm.invoke(prompt).content
-            ado.commit_file_update(branch_name, file_path, new_content)
+            ado.commit_file_update(
+                repository_id=state["repo_id"],
+                branch_name=branch_name,
+                file_path=file_path,
+                new_content=new_content
+            )
 
         state["status"] = "InfraEngineer completed"
 

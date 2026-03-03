@@ -27,34 +27,26 @@ def run(state):
         files = state["diagnosis"]["files_to_modify"]
 
         for file_path in files:
-            print(f"[AppEngineer] Fetching existing file: {file_path}")
-
+            print(f"[PipelineEngineer] Fetching existing file: {file_path}")
             existing_content = ado.get_file_content(
                 repository_id=state["repo_id"],
                 branch_name=state["source_branch"],
                 file_path=file_path
             )
-      #  for file_path in files:
-            # prompt = f"""
-            # Modify pipeline file {file_path} to fix the failure.
-
-            # Root cause:
-            # {state['diagnosis']['root_cause']}
-            # """
             prompt = f"""
-            You are a Senior Devops Engineer.
-
+            You are a Senior DevOps Engineer.
             Here is the current content of pipeline {file_path}:
-
             {existing_content}
-
             Root cause:
             {state['diagnosis']['root_cause']}
-
-            Provide the FULL corrected file content only.
-            Do not explain anything.
+            IMPORTANT: Do NOT change the pool configuration unless the root cause is directly related to the pool. If the error is about pool change, do NOT modify the pool section. Only fix the actual failure.
+            Provide ONLY the FULL corrected file content. No markdown, no explanation, just the file content.
             """
             new_content = llm.invoke(prompt).content
+            # Validate that pool is not changed unless required
+            if "pool:" in new_content and "pool:" not in existing_content:
+                print("[PipelineEngineer] WARNING: Pool configuration was added unexpectedly. Skipping commit.")
+                continue
             ado.commit_file_update(
                 repository_id=state["repo_id"],
                 branch_name=branch_name,
