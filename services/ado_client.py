@@ -303,28 +303,22 @@ class ADOClient:
         Streams the file from ADO and returns raw bytes.
         Suitable for large/binary/LFS files.
         """
-        try:
-            from azure.devops.v7_1.git.models import GitVersionDescriptor, GitVersionType
-        except ImportError:
-            from azure.devops.released.git.models import GitVersionDescriptor, GitVersionType
+        git_client = self.connection.clients.get_git_client()
+        from azure.devops.v7_1.git.models import GitVersionDescriptor
 
-        if not file_path.startswith("/"):
-            file_path = "/" + file_path
         branch = branch_name.replace("refs/heads/", "")
-
         version_descriptor = GitVersionDescriptor(
             version=branch,
-            version_type=GitVersionType.branch
+            version_type="branch"
         )
 
-        # get_item_content streams the file; join all chunks into bytes
-        # (Same underlying REST: Items - Get; here content comes as a stream) [1](https://learn.microsoft.com/en-us/rest/api/azure/devops/git/items/get?view=azure-devops-rest-7.1)[3](https://stackoverflow.com/questions/78814586/how-can-i-extract-file-contents-of-a-specific-commit-using-azure-devops-api-pyt)
-        content_iter = self.git_client.get_item_content(
+
+        content_iter = git_client.get_item_content(
             repository_id=repository_id,
             path=file_path,
             project=self.project,
             version_descriptor=version_descriptor,
-            resolve_lfs=True  # get actual content if file is LFS-tracked
+            resolve_lfs=True
         )
         return b"".join(content_iter)
 

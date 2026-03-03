@@ -53,45 +53,61 @@ def run(state):
 
         print(f"[Engineer] Files suggested for modification: {files}")
 
-        if not files or len(files) == 0:
-            print("[Engineer] No files suggested. Using PoC fallback.")
-            files = ["/README.md"]  
+        # if not files or len(files) == 0:
+        #     print("[Engineer] No files suggested. Using PoC fallback.")
+        #     files = ["/README.md"]  
 
         # --------------------------------------------------
         # 4️⃣ Generate Fix + Commit
         # --------------------------------------------------
         for file_path in files:
+            
+            print(f"[Engineer] Fetching existing file: {file_path}")
+
+            existing_content = ado.get_file_content(
+                repository_id=state['repo_id'],
+                branch_name=state['source_branch'],
+                file_path=file_path
+            )
+             # for debugging
+            #print(f"[Engineer] Existing content of {file_path}:\n{existing_content}")
             print(f"[Engineer] Generating fix for: {file_path}")
 
             content_prompt = f"""
             You are a senior software engineer.
 
-            Based on the following pipeline failure diagnosis,
-            compare the current content of {file_path} in the repository with best practices 
-            and generate an updated version of the file that would fix the issue.
+            Here is the current content of {file_path}:
+            {existing_content}
 
-            Return ONLY valid file content. No markdown. No explanation.
+            Based on the following pipeline failure diagnosis, generate the corrected file content. 
+            Only change what is necessary to fix the issue—do NOT rewrite unrelated parts of the file. 
+            Preserve all other lines as-is.
 
+            Comment the wrong lines with a comment like this:
+            # ERROR: <explanation of why this line is wrong> and append the corrected line below it.
+            Return ONLY the full corrected file content. No markdown, no explanation.
+
+            DO NOT CHANGE ANYTHING UNRELATED TO THE FIX. If the file is correct and does not need changes, just return the original content without any modifications.
             Diagnosis:
             {state['diagnosis']['root_cause']}
             """
 
             response = llm.invoke(content_prompt)
-            new_content = response.content.strip()
+            patch_instructions = response.content.strip()
 
-            print(f"[Engineer] LLM response for {file_path} received.")
-            print(f"[Engineer] New content for {file_path}:\n{new_content}")
+            print(f"[Engineer] LLM patch instructions for {file_path} received.")
+            #print(f"[Engineer] Patch instructions:\n{patch_instructions}")
 
-            if not new_content:
-                raise Exception(f"LLM returned empty content for {file_path}")
 
-            print(f"[Engineer] Committing update to {file_path}")
+            # commiting changes to file
+
+            print(f"[Engineer] Committing file {file_path} changes to branch {branch_name}...")
 
             ado.commit_file_update(
                 repository_id=state['repo_id'],
                 branch_name=branch_name,
-                file_path=file_path,
-                new_content=new_content
+                file_path=file_path,  # Just committing the first file for PoC
+                new_content=patch_instructions  # Placeholder content
             )
 
         # --------------------------------------------------
