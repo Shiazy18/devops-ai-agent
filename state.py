@@ -19,6 +19,8 @@ class PipelineState(TypedDict, total=False):
     commit_id: Optional[str]
     new_branch: Optional[str]
 
+    processed_logs: Optional[str]
+
     # Failure validation
     failure_verified: bool
 
@@ -39,3 +41,7 @@ class PipelineState(TypedDict, total=False):
 
     # System state
     status: str
+
+    timeline: Optional[List[str]]
+
+    raw_logs: Optional[str]

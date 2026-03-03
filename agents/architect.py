@@ -16,54 +16,61 @@ def run(state):
         ado = ADOClient()
         llm = get_llm()
 
-        # --------------------------------------------------
-        # 1️⃣ Fetch Build Metadata
-        # --------------------------------------------------
-        build = ado.build_client.get_build(
-            project=ado.project,
-            build_id=build_id
-        )
+        # # --------------------------------------------------
+        # # Fetch Build Metadata
+        # # --------------------------------------------------
+        # build = ado.build_client.get_build(
+        #     project=ado.project,
+        #     build_id=build_id
+        # )
 
-        if not build:
-            raise Exception(f"Build {build_id} not found")
+        # if not build:
+        #     raise Exception(f"Build {build_id} not found")
 
-        # Check build result
-        if build.result != "failed":
-            print(f"[Architect] Build result is '{build.result}'. Skipping remediation.")
-            state["status"] = "Build not failed. No action required."
-            state["failure_verified"] = False
-            return state
+        # # Check build result
+        # if build.result != "failed":
+        #     print(f"[Architect] Build result is '{build.result}'. Skipping remediation.")
+        #     state["status"] = "Build not failed. No action required."
+        #     state["failure_verified"] = False
+        #     return state
 
-        state["failure_verified"] = True
+        # state["failure_verified"] = True
 
-        # Extract repository metadata
-        state["repo_id"] = build.repository.id
-        state["repo_name"] = build.repository.name
-        state["source_branch"] = build.source_branch.replace("refs/heads/", "")
-        state["commit_id"] = build.source_version
+        # # Extract repository metadata
+        # state["repo_id"] = build.repository.id
+        # state["repo_name"] = build.repository.name
+        # state["source_branch"] = build.source_branch.replace("refs/heads/", "")
+        # state["commit_id"] = build.source_version
 
-        print(f"[Architect] Repo: {state['repo_name']}")
-        print(f"[Architect] Branch: {state['source_branch']}")
-        print(f"[Architect] Commit: {state['commit_id']}")
-        print(f"[Architect] RepoID: {state['repo_id']}")
-
-        # --------------------------------------------------
-        # 2️⃣ Fetch Logs
-        # --------------------------------------------------
-        logs = ado.get_build_logs(build_id)
-
-        if not logs:
-            raise Exception("No logs found for build")
-
-        state["logs"] = logs
+        # print(f"[Architect] Repo: {state['repo_name']}")
+        # print(f"[Architect] Branch: {state['source_branch']}")
+        # print(f"[Architect] Commit: {state['commit_id']}")
+        # print(f"[Architect] RepoID: {state['repo_id']}")
 
         # --------------------------------------------------
-        # 3️⃣ Diagnose via LLM (PoC version)
+        # Fetch Logs
         # --------------------------------------------------
+        # logs = ado.get_build_logs(build_id)
+
+        # if not logs:
+        #     raise Exception("No logs found for build")
+
+        # state["logs"] = logs
+
+        # --------------------------------------------------
+        # Diagnose via LLM
+        # --------------------------------------------------
+
+
+        processed_logs = state["processed_logs"]
+        #for debugging
+        print(f"[Architect] Processed logs for LLM:\n{processed_logs}")
+
         print("[Architect] Running diagnosis via LLM...")
 
         prompt = f"""
         You are a senior DevOps Architect.
+        You are diagnosing a failed Azure DevOps pipeline build.
 
         Analyze the complete pipeline logs and look for error messages. 
         Carefully look for error messages as there can be multiple parallel jobs some may have succeeded and some may have failed. 
@@ -75,6 +82,7 @@ def run(state):
 
         FAILURE_TYPE: <application | infrastructure | pipeline>
 
+        look into the branch {state['source_branch']} and suggest which files to modify to fix the issue.
         FILES_TO_MODIFY
         Just give the exact file paths from the repo, no explanations:
         Also if fixable via pipeline, suggest the pipeline file. Only give file paths, no explanations. If no files need to be modified, just say none.
@@ -88,7 +96,7 @@ def run(state):
     
 
         Logs:
-        {logs}
+        {processed_logs}
         """
 
         response = llm.invoke(prompt)

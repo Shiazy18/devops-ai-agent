@@ -326,3 +326,31 @@ class ADOClient:
     # Set up logging so you can see errors in Azure/Console
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
+
+
+    def get_timeline_records(self, build_id):
+        try:
+            timeline = self.build_client.get_build_timeline(
+                project=self.project,
+                build_id=build_id
+            )
+            return timeline.records
+        except Exception as e:
+            logger.error(f"Failed to fetch timeline records: {e}")
+            return []
+        
+
+    def get_commit_details(self, repository_id: str, commit_id: str):
+        git_client = self.connection.clients.get_git_client()
+        try:
+            commit = git_client.get_commit(
+                repository_id=repository_id,
+                commit_id=commit_id,
+                project=self.project
+            )
+            return {
+                "message": commit.comment,
+            }
+        except Exception as e:
+            logger.error(f"Failed to fetch commit details: {e}")
+            return None

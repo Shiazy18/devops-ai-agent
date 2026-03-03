@@ -8,6 +8,7 @@ from agents.pipeline_engineer import run as pipeline_engineer
 from agents.pr_agent import run as pr_agent
 from agents.manager import run as manager
 from agents.engineer import run as engineer
+from agents.log_processor import run as log_processor
 
 # def route_by_failure_type(state):
 #     diagnosis = state.get("diagnosis", {})
@@ -32,6 +33,9 @@ from agents.engineer import run as engineer
 def build_graph():
     workflow = StateGraph(dict)
 
+
+
+    workflow.add_node("log_processor", log_processor)
     workflow.add_node("architect", architect)
     workflow.add_node("engineer", engineer)
     # workflow.add_node("app_engineer", app_engineer)
@@ -40,10 +44,11 @@ def build_graph():
     workflow.add_node("pr_agent", pr_agent)
     workflow.add_node("manager", manager)
 
-    workflow.set_entry_point("architect")
+    workflow.set_entry_point("log_processor")
 
     # workflow.add_conditional_edges("architect", route_by_failure_type)
 
+    workflow.add_edge("log_processor", "architect")
     workflow.add_edge("architect", "engineer")
     workflow.add_edge("engineer", "pr_agent")
     workflow.add_edge("pr_agent", "manager")
