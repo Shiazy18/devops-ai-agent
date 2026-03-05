@@ -79,13 +79,15 @@ def run(state):
             Here is the current content of {file_path}:
             {existing_content}
 
-            Based on the following pipeline failure diagnosis, generate the corrected file content. 
+            Based on the following pipeline failure diagnosis, provide the fix following best practices. 
+    
             Only change what is necessary to fix the issue—do NOT rewrite unrelated parts of the file. 
             Preserve all other lines as-is.
 
             Comment the wrong lines with a comment like this:
             # ERROR: <explanation of why this line is wrong> and append the corrected line below it.
             Return ONLY the full corrected file content. No markdown, no explanation.
+            Take care of syntax and formatting.
 
             DO NOT CHANGE ANYTHING UNRELATED TO THE FIX. If the file is correct and does not need changes, just return the original content without any modifications.
             Diagnosis:

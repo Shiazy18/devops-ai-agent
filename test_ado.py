@@ -19,7 +19,7 @@ load_dotenv()
 
 def test_run():
     # 🔹 Replace with a REAL failed build ID
-    build_id = 71
+    build_id = 74
     ado = ADOClient()
     result = run_remediation(build_id)
 
