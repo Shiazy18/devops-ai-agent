@@ -20,7 +20,7 @@ class PipelineState(TypedDict, total=False):
     new_branch: Optional[str]
 
     # Failure validation
-    failure_verified: bool
+    
 
     # Diagnosis
     diagnosis: Optional[Diagnosis]
@@ -39,3 +39,9 @@ class PipelineState(TypedDict, total=False):
 
     # System state
     status: str
+
+    # pre validation metrics
+    prevalidationconfidence: Optional[float]
+    prevalidation_risk_level: Optional[str]
+    prevalidation_risk_score: Optional[float]
+    failure_verified: bool

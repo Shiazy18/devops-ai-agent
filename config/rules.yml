@@ -1,0 +1,32 @@
+# =============================
+# Deterministic Remediation Rules
+# If signature matches, LLM is NOT called.
+# =============================
+
+- signature: "npm: command not found"
+  root_cause: "missing_dependency"
+  files_to_modify:
+    - "azure-pipelines.yml"
+  fix_type: "deterministic"
+  patch: |
+    # Insert NodeTool task before npm
+    steps:
+      - task: NodeTool@0
+        inputs:
+          versionSpec: '18.x'
+        displayName: 'Install Node.js 18'
+
+
+- signature: "##[error] No hosted parallelism has been purchased"
+  root_cause: "pipeline"
+  files_to_modify:
+    - "azure-pipelines.yml"
+  fix_type: "no_fix"
+  patch_note: "Billing/organization issue — cannot auto-fix."
+
+- signature: "##[error] The pipeline is not valid"
+  root_cause: "yaml_syntax_error"
+  files_to_modify:
+    - "azure-pipelines.yml"
+  fix_type: "deterministic"
+  patch_note: "Rebuild YAML indentation using safe YAML formatter."

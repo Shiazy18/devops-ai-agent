@@ -1,0 +1,57 @@
+# =============================
+# AI Remediation Policy (Enterprise)
+# =============================
+
+allow_write_paths:
+  - "pipelines/**"
+  - ".azuredevops/**"
+  - "scripts/**"
+  - "infra/terraform/**"
+  - "infra/bicep/**"
+  - "src/**/*.py"
+  - "src/**/*.js"
+  - "src/**/*.ts"
+
+deny_write_paths:
+  - "auth/**"
+  - "secrets/**"
+  - "config/private/**"
+  - "payment/**"
+  - "credentials/**"
+  - "**/*.pem"
+  - "**/*.key"
+
+# Categories where agent is allowed to auto‑fix safely
+auto_fix_categories:
+  - "yaml_syntax_error"
+  - "missing_dependency"
+  - "import_error"
+  - "wrong_path_reference"
+  - "terraform_format_error"
+  - "bicep_type_mismatch"
+  - "missing_env_var"
+
+# Agent must NOT auto‑fix these – suggestion-only
+suggest_only_categories:
+  - "deps_minor_bumps"
+  - "docker_base_image"
+  - "deprecated_functions"
+  - "pytest_failure"
+
+# These are NEVER allowed to be edited or auto‑fixed
+blocked_categories:
+  - "credential_flow"
+  - "secrets_handling"
+  - "payment_logic"
+  - "authorization_logic"
+  - "security_critical"
+
+# Prevent destructive or runaway changes
+max_files_changed: 5
+max_total_diff_lines: 150
+
+# Optional: require a reviewer if category is in this list
+require_reviewer_for:
+  - "infrastructure"
+  - "security"
+  - "database_migration"

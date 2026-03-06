@@ -1,0 +1,14 @@
+{
+  "root_causes_allowed": [
+    "yaml_syntax_error",
+    "missing_dependency",
+    "import_error",
+    "wrong_path_reference",
+    "terraform_format_error",
+    "bicep_type_mismatch",
+    "pytest_failure",
+    "container_build_error",
+    "missing_env_var",
+    "access_denied"
+  ]
+}
